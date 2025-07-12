@@ -1,5 +1,5 @@
 export async function askBackend(prompt) {
-  const response = await fetch('/api/ask', {
+  const response = await fetch('http://localhost:8080/api/ask', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
