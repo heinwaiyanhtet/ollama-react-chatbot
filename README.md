@@ -10,3 +10,14 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Docker
+
+Build the image and run it to serve the compiled app:
+
+```bash
+docker build -t ollama-chatbot .
+docker run -p 3000:3000 ollama-chatbot
+```
+
+The frontend expects a backend available at `http://localhost:8080/api/ask`.
