@@ -1,3 +1,18 @@
+
+### Build Docker and push
+
+```
+
+    docker buildx build --platform linux/amd64 -t registry.digitalocean.com/ollama-react-gpt/my-app:latest . --push
+
+ ```
+
+
+
+
+
+
+
 # React + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
@@ -21,3 +36,4 @@ docker run -p 3000:3000 ollama-chatbot
 ```
 
 The frontend expects a backend available at `http://localhost:8080/api/ask`.
+
