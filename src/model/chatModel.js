@@ -1,5 +1,5 @@
 export async function askBackend(prompt) {
-  const response = await fetch('http://localhost:8080/api/ask', {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ask`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
