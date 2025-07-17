@@ -1,0 +1,3 @@
+{
+  "VITE_API_URL": "http://ollama-backend:8080"
+}
