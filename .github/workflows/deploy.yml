@@ -45,9 +45,12 @@ jobs:
       - name: Build and push container
         uses: docker/build-push-action@v5
         with:
-          context: .
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            context: .
+            push: true
+            tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            build-args: |
+                VITE_API_URL=${{ secrets.VITE_API_URL }}
+
 
       - name: Set image for deployment
         run: echo "IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
