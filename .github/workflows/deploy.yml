@@ -1,15 +1,19 @@
-name: Build and Deploy
+name: CI/CD
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main"]
+
+env:
+  REGISTRY: registry.digitalocean.com/ollama-react-gpt
+  IMAGE_NAME: my-app
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v3
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -25,25 +29,43 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Set up doctl
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to DigitalOcean Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.DOCR_USERNAME }}
+          password: ${{ secrets.DOCR_PASSWORD }}
+
+      - name: Build and push container
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest,${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+
+      - name: Set image for deployment
+        run: echo "IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Install doctl
         uses: digitalocean/action-doctl@v2
         with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          token: ${{ secrets.DO_API_TOKEN }}
 
-      - name: Log in to Container Registry
-        run: doctl registry login
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
 
-      - name: Build and push Docker image
-        run: |
-          docker build -t registry.digitalocean.com/ollama-react-gpt/my-app:${{ github.sha }} .
-          docker push registry.digitalocean.com/ollama-react-gpt/my-app:${{ github.sha }}
-          docker tag registry.digitalocean.com/ollama-react-gpt/my-app:${{ github.sha }} registry.digitalocean.com/ollama-react-gpt/my-app:latest
-          docker push registry.digitalocean.com/ollama-react-gpt/my-app:latest
-
-      - name: Configure kubectl
-        run: doctl kubernetes cluster kubeconfig save ${{ secrets.K8S_CLUSTER_NAME }}
+      - name: Configure kubeconfig
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.DOKS_CLUSTER }}
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f k8s/deployment.yml
-          kubectl rollout status deployment/ollama-react-gpt
+          kubectl set image deployment/ollama-react-gpt ollama-react-gpt=${IMAGE} -n ${{ secrets.K8S_NAMESPACE }}
+          kubectl rollout status deployment/ollama-react-gpt -n ${{ secrets.K8S_NAMESPACE }}
