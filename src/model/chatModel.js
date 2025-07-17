@@ -1,7 +1,7 @@
-import env from "react-dotenv";
+// import env from "react-dotenv";
 
 export async function askBackend(prompt) {
-  const response = await fetch(`${env.VITE_API_URL}/api/ask`, {
+  const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ask`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
