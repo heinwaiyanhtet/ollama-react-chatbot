@@ -1,0 +1,49 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Set up doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Log in to Container Registry
+        run: doctl registry login
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t registry.digitalocean.com/ollama-react-gpt/my-app:${{ github.sha }} .
+          docker push registry.digitalocean.com/ollama-react-gpt/my-app:${{ github.sha }}
+          docker tag registry.digitalocean.com/ollama-react-gpt/my-app:${{ github.sha }} registry.digitalocean.com/ollama-react-gpt/my-app:latest
+          docker push registry.digitalocean.com/ollama-react-gpt/my-app:latest
+
+      - name: Configure kubectl
+        run: doctl kubernetes cluster kubeconfig save ${{ secrets.K8S_CLUSTER_NAME }}
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yml
+          kubectl rollout status deployment/ollama-react-gpt
