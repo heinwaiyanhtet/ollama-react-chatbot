@@ -37,10 +37,3 @@ docker run -p 3000:3000 ollama-chatbot
 
 The frontend expects a backend available at `http://localhost:8080/api/ask`.
 
-## Runtime configuration
-
-The container generates an `env.js` file at startup which exposes
-`VITE_API_URL` via `window.ENV`. Set the `VITE_API_URL` environment variable in
-your Kubernetes deployment to change the backend URL without rebuilding the
-image.
-
